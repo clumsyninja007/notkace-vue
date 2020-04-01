@@ -1,108 +1,56 @@
 <template>
-  <table class="comment-table">
-    <loading v-if="loading" :localLoader="true"></loading>
-    <tr>
-      <td>
-        <b>Long Description:</b>
-      </td>
-      <td></td>
-      <td>
-        <b>Last Comment:</b>
-      </td>
-    </tr>
-    <tr>
-      <td class="formatted">{{ ticketInfo.Summary }}</td>
-      <td></td>
-      <td class="formatted">
-        <span class="no-wrap">{{
-          ticketInfo.Commenter + ' ' + fixDate(ticketInfo.Timestamp)
-        }}</span
-        ><br />{{ ticketInfo.Comment }}
-      </td>
-    </tr>
-  </table>
+  <div class="container">
+    <div
+      class="tile is-ancestor"
+      style="white-space: pre-line; word-break: break-word"
+    >
+      <div class="tile is-parent">
+        <div class="tile is-child">
+          <h2 class="title is-4">Long Description</h2>
+          <p style="white-space: pre-line;">
+            {{ ticketInfo.summary }}
+          </p>
+        </div>
+      </div>
+      <div class="tile is-parent">
+        <div class="tile is-child">
+          <h2 class="title is-4">Last Comment</h2>
+          <h3 class="subtitle is-6">
+            {{ ticketInfo.commenter }} {{ fixDateTime(ticketInfo.timestamp) }}
+          </h3>
+          <p class="content" v-html="ticketInfo.comment"></p>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator';
-import Loading from '@/components/Loading.vue';
+import { Component, Prop } from 'vue-property-decorator';
+import { mixins } from 'vue-class-component';
+import Helpers from '@/mixins/helpers';
 
-@Component({
-  components: { Loading },
-})
-export default class TicketInfo extends Vue {
+@Component
+export default class TicketInfo extends mixins(Helpers) {
   @Prop()
   public ticket!: string;
 
-  public ticketInfo = {};
+  public ticketInfo: any = {};
   public loading = false;
 
   public getTicketInfo() {
     this.loading = true;
     this.$store
       .dispatch('getTicketInfo', this.ticket)
-      .then((result) => (this.ticketInfo = result))
+      .then((result) => {
+        this.ticketInfo = result;
+      })
       .then(() => (this.loading = false))
-      .catch((error) => console.log(error));
+      .catch((error) => this.errorMessage(error));
   }
 
-  public fixDate(date: any) {
-    const commentDate = new Date(date);
-
-    let hour;
-    let amPm;
-
-    if (commentDate.getHours() > 12) {
-      hour = commentDate.getHours() - 12;
-      amPm = 'PM';
-    } else if (commentDate.getHours() === 12) {
-      hour = 12;
-      amPm = 'PM';
-    } else if (commentDate.getHours() === 0) {
-      hour = 12;
-      amPm = 'AM';
-    } else {
-      hour = commentDate.getHours();
-      amPm = 'AM';
-    }
-
-    return (
-      commentDate.getMonth() +
-      1 +
-      '/' +
-      commentDate.getDate() +
-      '/' +
-      commentDate.getFullYear() +
-      ' ' +
-      String(hour) +
-      ':' +
-      ('0' + commentDate.getMinutes()).slice(-2) +
-      ' ' +
-      amPm
-    );
-  }
-
-  public mounted() {
+  public created() {
     this.getTicketInfo();
   }
 }
 </script>
-
-<style lang="scss" scoped>
-.comment-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  position: relative;
-  display: inline-block;
-
-  .no-wrap {
-    white-space: nowrap;
-  }
-
-  .formatted {
-    white-space: pre-wrap;
-    vertical-align: text-top;
-  }
-}
-</style>

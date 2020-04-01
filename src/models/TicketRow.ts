@@ -1,6 +1,6 @@
 import { Vue } from 'vue-property-decorator';
 
-export class TicketRow extends Vue {
+export default class TicketRow extends Vue {
   public Ticket!: number;
   public Title!: string;
   public Priority!: string;
