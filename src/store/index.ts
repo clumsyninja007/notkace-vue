@@ -235,7 +235,6 @@ export default new Vuex.Store({
         if (res.status === 200) {
           const json = await res.json();
 
-          console.log(json);
           commit('setRows', json.result);
           commit('setTotal', json.total);
           commit('toggleLoading', false);
