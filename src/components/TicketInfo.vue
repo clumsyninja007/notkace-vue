@@ -3,6 +3,7 @@
     <div
       class="tile is-ancestor"
       style="white-space: pre-line; word-break: break-word"
+      v-if="!loading"
     >
       <div class="tile is-parent">
         <div class="tile is-child">
@@ -22,6 +23,7 @@
         </div>
       </div>
     </div>
+    <b-loading :active.sync="loading" :is-full-page="false"></b-loading>
   </div>
 </template>
 
@@ -29,28 +31,37 @@
 import { Component, Prop } from 'vue-property-decorator';
 import { mixins } from 'vue-class-component';
 import Helpers from '@/mixins/helpers';
+import { mapActions } from 'vuex';
 
-@Component
+@Component({
+  methods: { ...mapActions(['getTicketInfo']) },
+})
 export default class TicketInfo extends mixins(Helpers) {
   @Prop()
-  public ticket!: string;
+  ticket!: number;
 
-  public ticketInfo: any = {};
-  public loading = false;
+  // mapped actions
+  getTicketInfo!: (ticket: number) => TicketInfo;
 
-  public getTicketInfo() {
+  ticketInfo!: TicketInfo;
+  loading = false;
+
+  async created() {
     this.loading = true;
-    this.$store
-      .dispatch('getTicketInfo', this.ticket)
-      .then((result) => {
-        this.ticketInfo = result;
-      })
-      .then(() => (this.loading = false))
-      .catch((error) => this.errorMessage(error));
-  }
 
-  public created() {
-    this.getTicketInfo();
+    try {
+      this.ticketInfo = await this.getTicketInfo(this.ticket);
+    } catch (e) {
+      this.errorMessage(e);
+    }
+
+    this.loading = false;
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.container {
+  min-height: 50px;
+}
+</style>

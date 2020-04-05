@@ -2,13 +2,13 @@
   <section>
     <div class="container is-fullhd">
       <b-table
-        :data="this.$store.state.rows"
-        :loading="true"
+        :data="rows"
+        :loading="loading"
         paginated
         backend-pagination
-        :total="this.$store.state.total"
-        :per-page="this.$store.state.perPage"
-        :current-page.sync="$store.state.currPage"
+        :total="total"
+        :per-page="perPage"
+        :current-page.sync="currPage"
         @page-change="onPageChange"
         aria-next-label="Next page"
         aria-previous-label="Previous page"
@@ -30,10 +30,12 @@
             numeric
             sortable
             centered
-            :visible="!$store.state.excludedColumns.includes('ticket')"
+            :visible="!excludedColumns.includes('ticket')"
           >
             <a
-              :href="'http://cty-k1k/adminui/ticket?ID=' + props.row.ticket"
+              :href="
+                'https://nokace.archerharmony.com/ticket?ID=' + props.row.ticket
+              "
               target="_blank"
               rel="noopener nofollow"
             >
@@ -46,7 +48,7 @@
             label="Priority"
             sortable
             centered
-            :visible="!$store.state.excludedColumns.includes('priority')"
+            :visible="!excludedColumns.includes('priority')"
           >
             <span :class="priorityColor(props.row.priority)">
               {{ props.row.priority }}
@@ -57,7 +59,7 @@
             field="title"
             label="Brief Description"
             sortable
-            :visible="!$store.state.excludedColumns.includes('title')"
+            :visible="!excludedColumns.includes('title')"
           >
             {{ props.row.title }}
           </b-table-column>
@@ -67,7 +69,7 @@
             label="Status"
             sortable
             centered
-            :visible="!$store.state.excludedColumns.includes('status')"
+            :visible="!excludedColumns.includes('status')"
           >
             {{ props.row.status }}
           </b-table-column>
@@ -78,8 +80,7 @@
             sortable
             centered
             :visible="
-              !$store.state.excludedColumns.includes('owner') &&
-                $store.state.selectedAssignee === '*'
+              !excludedColumns.includes('owner') && selectedAssignee === '*'
             "
           >
             {{ props.row.owner }}
@@ -90,7 +91,7 @@
             label="Customer"
             sortable
             centered
-            :visible="!$store.state.excludedColumns.includes('submitter')"
+            :visible="!excludedColumns.includes('submitter')"
           >
             {{ props.row.submitter }}
           </b-table-column>
@@ -101,8 +102,7 @@
             sortable
             centered
             :visible="
-              !$store.state.excludedColumns.includes('dept') &&
-                $store.state.selectedDepartment === '*'
+              !excludedColumns.includes('dept') && selectedDepartment === '*'
             "
           >
             {{ getDept(props.row.dept) }}
@@ -114,8 +114,7 @@
             sortable
             centered
             :visible="
-              !$store.state.excludedColumns.includes('location') &&
-                $store.state.selectedLocation === '*'
+              !excludedColumns.includes('location') && selectedLocation === '*'
             "
           >
             {{ props.row.location }}
@@ -127,8 +126,7 @@
             sortable
             centered
             :visible="
-              !$store.state.excludedColumns.includes('asset') &&
-                $store.state.selectedSoftware === '*'
+              !excludedColumns.includes('asset') && selectedSoftware === '*'
             "
           >
             {{ props.row.Asset }}
@@ -140,8 +138,8 @@
             sortable
             centered
             :visible="
-              !$store.state.excludedColumns.includes('referredTo') &&
-                $store.state.selectedReferredTo === '*'
+              !excludedColumns.includes('referredTo') &&
+                selectedReferredTo === '*'
             "
           >
             {{ props.row.referredTo }}
@@ -152,7 +150,7 @@
             label="Create Date"
             sortable
             centered
-            :visible="!$store.state.excludedColumns.includes('created')"
+            :visible="!excludedColumns.includes('created')"
           >
             {{ fixDate(props.row.created) }}
           </b-table-column>
@@ -160,6 +158,17 @@
 
         <template slot="detail" slot-scope="props">
           <ticket-info :ticket="props.row.ticket"></ticket-info>
+        </template>
+
+        <template slot="empty">
+          <section class="section">
+            <div class="content has-text-grey has-text-centered">
+              <p>
+                <b-icon icon="emoticon-sad" size="is-large"> </b-icon>
+              </p>
+              <p>Nothing here.</p>
+            </div>
+          </section>
         </template>
       </b-table>
     </div>
@@ -171,25 +180,68 @@ import { Component } from 'vue-property-decorator';
 import { mixins } from 'vue-class-component';
 import Helpers from '@/mixins/helpers';
 import TicketInfo from '@/components/TicketInfo.vue';
+import { mapActions, mapState } from 'vuex';
+import TicketRow from '../models/TicketRow';
 
-@Component({ components: { TicketInfo } })
+@Component({
+  components: { TicketInfo },
+  computed: {
+    ...mapState([
+      'selectedAssignee',
+      'selectedDepartment',
+      'selectedLocation',
+      'selectedSoftware',
+      'selectedReferredTo',
+      'rows',
+      'loading',
+      'total',
+      'perPage',
+      'currPage',
+      'excludedColumns',
+    ]),
+  },
+  methods: {
+    ...mapActions(['changePage', 'changeSort', 'getTickets', 'setParams']),
+  },
+})
 export default class TicketTable extends mixins(Helpers) {
-  public get defaultSort() {
-    if (this.$store.state.selectedAssignee === '*') {
+  // mapped state
+  selectedAssignee!: string;
+  selectedDepartment!: string;
+  selectedLocation!: string;
+  selectedSoftware!: string;
+  selectedReferredTo!: string;
+  rows!: TicketRow[];
+  loading!: boolean;
+  total!: number;
+  perPage!: number;
+  currPage!: number;
+  excludedColumns!: string[];
+  // mapped actions
+  changePage!: (page: number) => void;
+  changeSort!: (sort: string) => void;
+  getTickets!: () => void;
+  setParams!: () => void;
+
+  // methods
+  get defaultSort() {
+    if (this.selectedAssignee === '*') {
       return 'owner';
     }
-
     return 'priority';
   }
 
-  public getDept(rowName: string) {
+  // Departments are stored in Kace with their budget units in [] brackets
+  // I don't want to see these, so I'm stripping them here
+  getDept(rowName: string) {
     if (rowName.indexOf(' [') > 0) {
       return rowName.slice(0, rowName.indexOf('[')).trim();
     }
     return rowName.trim();
   }
 
-  public priorityColor(color: string) {
+  // used for adding a class to Priority tags in order to color them appropriately
+  priorityColor(color: string) {
     switch (color.toLowerCase()) {
       case 'emergency':
         return 'has-text-danger';
@@ -202,14 +254,18 @@ export default class TicketTable extends mixins(Helpers) {
     }
   }
 
-  public async onPageChange(page: number) {
-    await this.$store.dispatch('changePage', page);
-    this.$store
-      .dispatch('getTickets')
-      .catch((error) => this.errorMessage(error));
+  async onPageChange(page: number) {
+    this.changePage(page);
+
+    try {
+      this.getTickets();
+    } catch (e) {
+      this.errorMessage(e);
+    }
   }
 
-  public async onSort(field: string, order: string) {
+  // my api determines sort direction by a + or - prefix to the sort field
+  async onSort(field: string, order: string) {
     let sort = '';
 
     if (order === 'desc') {
@@ -218,22 +274,25 @@ export default class TicketTable extends mixins(Helpers) {
       sort = '+' + field;
     }
 
-    await this.$store.dispatch('changePage', 1);
-    await this.$store.dispatch('changeSort', sort);
+    this.changePage(1);
+    this.changeSort(sort);
+
     try {
-      await this.$store.dispatch('getTickets');
-    } catch (error) {
-      this.errorMessage(error);
+      await this.getTickets();
+    } catch (e) {
+      this.errorMessage(e);
     }
   }
 
-  public created() {
-    this.$store
-      .dispatch('setParams')
-      .catch((error) => this.errorMessage(error));
-    this.$store
-      .dispatch('getTickets')
-      .catch((error) => this.errorMessage(error));
+  // lifecycle hooks
+  async created() {
+    this.setParams();
+
+    try {
+      await this.getTickets();
+    } catch (e) {
+      this.errorMessage(e);
+    }
   }
 }
 </script>

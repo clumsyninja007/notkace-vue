@@ -59,11 +59,7 @@
             </div>
           </div>
           <div class="tile is-parent">
-            <div class="tile is-child box is-shadowless">
-              <figure class="image is-128x128 is-pulled-right">
-                <img src="@/assets/countySeal.png" width="150" />
-              </figure>
-            </div>
+            <div class="tile is-child box is-shadowless"></div>
           </div>
         </div>
       </div>

@@ -18,10 +18,10 @@
       <div class="box">
         <b-field grouped group-multiline>
           <b-field label="Assignee">
-            <b-select v-model="selectedAssignee">
+            <b-select v-model="currentAssignee">
               <option value="*" selected>*</option>
               <option
-                v-for="owner in $store.state.owners"
+                v-for="owner in owners"
                 :key="owner.id"
                 :value="owner.userName"
                 >{{ owner.fullName }}</option
@@ -29,22 +29,18 @@
             </b-select>
           </b-field>
           <b-field label="Documented Software">
-            <b-select v-model="selectedSoftware">
+            <b-select v-model="currentSoftware">
               <option value="*" selected>*</option>
-              <option
-                v-for="sw in $store.state.software"
-                :key="sw.id"
-                :value="sw.name"
-              >
+              <option v-for="sw in software" :key="sw.id" :value="sw.name">
                 {{ sw.name }}
               </option>
             </b-select>
           </b-field>
           <b-field label="Referred To">
-            <b-select v-model="selectedReferredTo">
+            <b-select v-model="currentReferredTo">
               <option value="*" selected>*</option>
               <option
-                v-for="referee in $store.state.referredTo"
+                v-for="referee in referredTo"
                 :key="referee.id"
                 :value="referee.name"
                 >{{ referee.name }}</option
@@ -52,10 +48,10 @@
             </b-select>
           </b-field>
           <b-field label="Department">
-            <b-select v-model="selectedDepartment">
+            <b-select v-model="currentDepartment">
               <option value="*" selected>*</option>
               <option
-                v-for="department in $store.state.departments"
+                v-for="department in departments"
                 :key="department.id"
                 :value="department.name"
                 >{{ department.name }}</option
@@ -63,10 +59,10 @@
             </b-select>
           </b-field>
           <b-field label="Location">
-            <b-select v-model="selectedLocation">
+            <b-select v-model="currentLocation">
               <option value="*" selected>*</option>
               <option
-                v-for="location in $store.state.locations"
+                v-for="location in locations"
                 :key="location.id"
                 :value="location.name"
                 >{{ location.name }}</option
@@ -76,7 +72,7 @@
           <b-field label="Exclude Columns">
             <b-select v-model="selectedExclusions" multiple>
               <option
-                v-for="column in $store.state.columns"
+                v-for="column in columns"
                 :key="'exclude_' + column.dataIndex"
                 :value="column.dataIndex"
               >
@@ -103,57 +99,119 @@
 <script lang="ts">
 import { Component, Mixins } from 'vue-property-decorator';
 import Helpers from '@/mixins/helpers';
+import { mapActions, mapState } from 'vuex';
+import User from '../models/User';
+import Asset from '../models/Asset';
+import Columns from '../models/Columns';
 
-@Component
+@Component({
+  computed: {
+    ...mapState([
+      'selectedAssignee',
+      'selectedDepartment',
+      'selectedLocation',
+      'selectedSoftware',
+      'selectedReferredTo',
+      'owners',
+      'departments',
+      'locations',
+      'software',
+      'referredTo',
+      'columns',
+      'excludedColumns',
+    ]),
+  },
+  methods: {
+    ...mapActions([
+      'changePage',
+      'getTickets',
+      'setParams',
+      'getOwners',
+      'getSoftware',
+      'getReferredTo',
+      'getDepartment',
+      'getLocation',
+    ]),
+  },
+})
 export default class ParamsForm extends Mixins(Helpers) {
-  public showMenu = false;
-  public selectedAssignee = '*';
-  public selectedSoftware = '*';
-  public selectedReferredTo = '*';
-  public selectedDepartment = '*';
-  public selectedLocation = '*';
-  public selectedExclusions = [];
+  // mapped state
+  selectedAssignee!: string;
+  selectedDepartment!: string;
+  selectedLocation!: string;
+  selectedSoftware!: string;
+  selectedReferredTo!: string;
+  owners!: User[];
+  departments!: Asset[];
+  locations!: Asset[];
+  software!: Asset[];
+  referredTo!: Asset[];
+  columns!: Columns[];
+  excludedColumns!: string[];
 
-  public toggleMenu() {
+  // mapped actions
+  changePage!: (page: number) => void;
+  getTickets!: () => void;
+  setParams!: () => void;
+  getOwners!: () => void;
+  getSoftware!: () => void;
+  getReferredTo!: () => void;
+  getDepartment!: () => void;
+  getLocation!: () => void;
+
+  // properties
+  showMenu = false;
+  currentAssignee = '*';
+  currentSoftware = '*';
+  currentReferredTo = '*';
+  currentDepartment = '*';
+  currentLocation = '*';
+  selectedExclusions: string[] = [];
+
+  // methods
+  toggleMenu() {
     this.showMenu = !this.showMenu;
   }
 
-  public async refresh() {
-    await this.$store.dispatch('changePage', 1);
+  async refresh() {
+    this.changePage(1);
+
     try {
-      await this.$store.dispatch('getTickets');
-    } catch (error) {
-      this.$buefy.toast.open({ message: error, type: 'is-danger' });
+      await this.getTickets();
+    } catch (e) {
+      this.errorMessage(e);
     }
   }
 
-  public resetParams() {
-    this.selectedAssignee = '*';
-    this.selectedSoftware = '*';
-    this.selectedReferredTo = '*';
-    this.selectedDepartment = '*';
-    this.selectedLocation = '*';
+  resetParams() {
+    this.currentAssignee = '*';
+    this.currentSoftware = '*';
+    this.currentReferredTo = '*';
+    this.currentDepartment = '*';
+    this.currentLocation = '*';
   }
 
-  public async handleSubmit() {
+  async handleSubmit() {
     this.showMenu = false;
     window.scrollTo(0, 0);
+
+    // eslint-disable-next-line
     const query: { [k: string]: any } = {};
 
-    if (this.selectedAssignee !== '*') {
-      query.assignee = this.selectedAssignee;
+    if (this.currentAssignee !== '*') {
+      query.assignee = this.currentAssignee;
     }
-    if (this.selectedSoftware !== '*') {
-      query.software = this.selectedSoftware;
+    if (this.currentSoftware !== '*') {
+      query.software = this.currentSoftware;
     }
-    if (this.selectedReferredTo !== '*') {
-      query.referredTo = this.selectedReferredTo;
+    if (this.currentReferredTo !== '*') {
+      query.referredTo = this.currentReferredTo;
     }
-    if (this.selectedDepartment !== '*') {
-      query.department = this.selectedDepartment;
+    if (this.currentDepartment !== '*') {
+      query.department = this.currentDepartment;
     }
-    if (this.selectedLocation !== '*') {
-      query.location = this.selectedLocation;
+    if (this.currentLocation !== '*') {
+      query.location = this.currentLocation;
     }
     if (this.selectedExclusions.length > 0) {
       query.exclude = this.selectedExclusions.join(' ');
@@ -164,42 +222,35 @@ export default class ParamsForm extends Mixins(Helpers) {
       query,
     });
 
-    await this.$store.dispatch('setParams');
-    await this.$store.dispatch('changePage', 1);
+    this.setParams();
+    this.changePage(1);
+
     try {
-      await this.$store.dispatch('getTickets');
-    } catch (error) {
-      this.errorMessage(error);
+      await this.getTickets();
+    } catch (e) {
+      this.errorMessage(e);
     }
   }
 
-  public created() {
-    this.$store
-      .dispatch('setParams')
-      .catch((error) => this.errorMessage(error));
+  async created() {
+    this.setParams();
 
-    this.$store
-      .dispatch('getOwners')
-      .catch((error) => this.errorMessage(error));
-    this.$store
-      .dispatch('getSoftware')
-      .catch((error) => this.errorMessage(error));
-    this.$store
-      .dispatch('getReferredTo')
-      .catch((error) => this.errorMessage(error));
-    this.$store
-      .dispatch('getDepartment')
-      .catch((error) => this.errorMessage(error));
-    this.$store
-      .dispatch('getLocation')
-      .catch((error) => this.errorMessage(error));
+    try {
+      await this.getOwners();
+      await this.getSoftware();
+      await this.getReferredTo();
+      await this.getDepartment();
+      await this.getLocation();
+    } catch (e) {
+      this.errorMessage(e);
+    }
 
-    this.selectedAssignee = this.$store.state.selectedAssignee;
-    this.selectedSoftware = this.$store.state.selectedSoftware;
-    this.selectedReferredTo = this.$store.state.selectedReferredTo;
-    this.selectedDepartment = this.$store.state.selectedDepartment;
-    this.selectedLocation = this.$store.state.selectedLocation;
-    this.selectedExclusions = this.$store.state.excludedColumns;
+    this.currentAssignee = this.selectedAssignee;
+    this.currentSoftware = this.selectedSoftware;
+    this.currentReferredTo = this.selectedReferredTo;
+    this.currentDepartment = this.selectedDepartment;
+    this.currentLocation = this.selectedLocation;
+    this.selectedExclusions = this.excludedColumns;
   }
 }
 </script>

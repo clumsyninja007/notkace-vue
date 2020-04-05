@@ -2,12 +2,17 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import Columns from '@/models/Columns';
 import TicketRow from '@/models/TicketRow';
+import User from '@/models/User';
+import Asset from '@/models/Asset';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    ticketApi: 'https://api.archerharmony.com/',
+    ticketApi:
+      process.env.NODE_ENV === 'production'
+        ? 'https://api.archerharmony.com/'
+        : 'http://localhost:28147/',
     color: '#fff',
     selectedAssignee: '*',
     selectedSoftware: '*',
@@ -19,11 +24,11 @@ export default new Vuex.Store({
     perPage: 100,
     total: 0,
     sort: '',
-    owners: [] as any[],
-    software: [],
-    referredTo: [],
-    departments: [],
-    locations: [],
+    owners: [] as User[],
+    software: [] as Asset[],
+    referredTo: [] as Asset[],
+    departments: [] as Asset[],
+    locations: [] as Asset[],
     loading: false,
     excludedColumns: [] as string[],
     columns: [
@@ -199,104 +204,76 @@ export default new Vuex.Store({
     },
   },
   actions: {
-    getTickets({ commit, state }: any) {
-      return new Promise((resolve, reject) => {
-        commit('toggleLoading', true);
+    async getTickets({ commit, state }: any) {
+      commit('toggleLoading', true);
 
-        let url =
-          state.ticketApi +
-          `HdTickets?perPage=${state.perPage}&page=${state.currPage}&excludedStatuses=CLOSED`;
-        if (state.selectedAssignee && state.selectedAssignee !== '*') {
-          url += `&assignee=${state.selectedAssignee}`;
-        }
-        if (state.selectedSoftware && state.selectedSoftware !== '*') {
-          url += `&software=${state.selectedSoftware}`;
-        }
-        if (state.selectedReferredTo && state.selectedReferredTo !== '*') {
-          url += `&referredTo=${state.selectedReferredTo}`;
-        }
-        if (state.selectedDepartment && state.selectedDepartment !== '*') {
-          url += `&department=${state.selectedDepartment}`;
-        }
-        if (state.selectedLocation && state.selectedLocation !== '*') {
-          url += `&location=${state.selectedLocation}`;
-        }
-        if (state.sort && state.sort !== '') {
-          url += `&sort=${state.sort}`;
-        }
+      let url =
+        state.ticketApi +
+        `HdTickets?perPage=${state.perPage}&page=${state.currPage}&excludedStatuses=CLOSED`;
+      if (state.selectedAssignee && state.selectedAssignee !== '*') {
+        url += `&assignee=${state.selectedAssignee}`;
+      }
+      if (state.selectedSoftware && state.selectedSoftware !== '*') {
+        url += `&software=${state.selectedSoftware}`;
+      }
+      if (state.selectedReferredTo && state.selectedReferredTo !== '*') {
+        url += `&referredTo=${state.selectedReferredTo}`;
+      }
+      if (state.selectedDepartment && state.selectedDepartment !== '*') {
+        url += `&department=${state.selectedDepartment}`;
+      }
+      if (state.selectedLocation && state.selectedLocation !== '*') {
+        url += `&location=${state.selectedLocation}`;
+      }
+      if (state.sort && state.sort !== '') {
+        url += `&sort=${state.sort}`;
+      }
 
-        fetch(url)
-          .then((response) => {
-            return response.json();
-          })
-          .then((rowData) => {
-            commit('setRows', rowData.result);
-            commit('setTotal', rowData.total);
-            commit('toggleLoading', false);
-          })
-          .then(() => resolve())
-          .catch((error) => {
-            commit('toggleLoading', false);
-            reject(error);
-          });
-      });
+      try {
+        const res = await fetch(url);
+
+        if (res.status === 200) {
+          const json = await res.json();
+
+          console.log(json);
+          commit('setRows', json.result);
+          commit('setTotal', json.total);
+          commit('toggleLoading', false);
+        } else if (res.status === 204) {
+          commit('setRows', []);
+          commit('setTotal', 0);
+          commit('toggleLoading', false);
+        }
+      } catch (e) {
+        commit('toggleLoading', false);
+        throw e;
+      }
     },
-    changePage({ commit }: any, page: any) {
-      return new Promise((resolve, reject) => {
-        commit('setCurrPage', page);
-        resolve();
-      });
+    changePage({ commit }: any, page: number) {
+      commit('setCurrPage', page);
     },
-    changeSort({ commit }: any, sort: any) {
-      return new Promise((resolve, reject) => {
-        commit('setSort', sort);
-        resolve();
-      });
+    changeSort({ commit }: any, sort: string) {
+      commit('setSort', sort);
     },
-    getOwners({ commit, state }: any) {
-      return new Promise((resolve, reject) => {
-        fetch(state.ticketApi + 'Users/Owners')
-          .then((response) => response.json())
-          .then((json) => commit('setOwners', json))
-          .then(() => resolve())
-          .catch((error) => reject(error));
-      });
+    async getOwners({ commit, state }: any) {
+      const res = await fetch(state.ticketApi + 'Users/Owners');
+      commit('setOwners', await res.json());
     },
-    getSoftware({ commit, state }: any) {
-      return new Promise((resolve, reject) => {
-        fetch(state.ticketApi + 'Assets/Type/6')
-          .then((response) => response.json())
-          .then((json) => commit('setSoftware', json))
-          .then(() => resolve())
-          .catch((error) => reject(error));
-      });
+    async getSoftware({ commit, state }: any) {
+      const res = await fetch(state.ticketApi + 'Assets/Type/6');
+      commit('setSoftware', await res.json());
     },
-    getReferredTo({ commit, state }: any) {
-      return new Promise((resolve, reject) => {
-        fetch(state.ticketApi + 'Assets/Type/4')
-          .then((response) => response.json())
-          .then((json) => commit('setReferredTo', json))
-          .then(() => resolve())
-          .catch((error) => reject(error));
-      });
+    async getReferredTo({ commit, state }: any) {
+      const res = await fetch(state.ticketApi + 'Assets/Type/4');
+      commit('setReferredTo', await res.json());
     },
-    getDepartment({ commit, state }: any) {
-      return new Promise((resolve, reject) => {
-        fetch(state.ticketApi + 'Assets/Type/2')
-          .then((response) => response.json())
-          .then((json) => commit('setDepartment', json))
-          .then(() => resolve())
-          .catch((error) => reject(error));
-      });
+    async getDepartment({ commit, state }: any) {
+      const res = await fetch(state.ticketApi + 'Assets/Type/2');
+      commit('setDepartment', await res.json());
     },
-    getLocation({ commit, state }: any) {
-      return new Promise((resolve, reject) => {
-        fetch(state.ticketApi + 'Assets/Type/1')
-          .then((response) => response.json())
-          .then((json) => commit('setLocation', json))
-          .then(() => resolve())
-          .catch((error) => reject(error));
-      });
+    async getLocation({ commit, state }: any) {
+      const res = await fetch(state.ticketApi + 'Assets/Type/1');
+      commit('setLocation', await res.json());
     },
     setParams({ commit }: any) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -342,15 +319,12 @@ export default new Vuex.Store({
         commit('setExcludedColumns', []);
       }
     },
-    getTicketInfo({ state }: any, ticket: any) {
-      return new Promise((resolve, reject) => {
-        const url = state.ticketApi + 'HdTickets/' + ticket + '/Info';
+    async getTicketInfo({ state }: any, ticket: number) {
+      const url = state.ticketApi + 'HdTickets/' + ticket + '/Info';
 
-        fetch(url)
-          .then((response) => response.json())
-          .then((json) => resolve(json))
-          .catch((error) => reject(error));
-      });
+      const res = await fetch(url);
+
+      return await res.json();
     },
   },
 });
