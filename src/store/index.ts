@@ -12,7 +12,7 @@ export default new Vuex.Store({
     ticketApi:
       process.env.NODE_ENV === 'production'
         ? 'https://api.archerharmony.com/'
-        : 'http://localhost:28147/',
+        : 'http://localhost:5001/',
     color: '#fff',
     selectedAssignee: '*',
     selectedSoftware: '*',
