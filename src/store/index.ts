@@ -226,7 +226,7 @@ export default new Vuex.Store({
         url += `&location=${state.selectedLocation}`;
       }
       if (state.sort && state.sort !== '') {
-        url += `&sort=${state.sort}`;
+        url += `&sort=${encodeURIComponent(state.sort)}`;
       }
 
       try {
