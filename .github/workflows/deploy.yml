@@ -1,68 +1,49 @@
-name: Deploy
+name: Deploy Frontend
+
+# Builds the Vue (CLI) SPA and deploys it to Azure Static Web Apps.
+# Requires:
+#   - secret AZURE_STATIC_WEB_APPS_API_TOKEN  (SWA deployment token from the portal)
+#   - repository variable VUE_APP_API_BASE_URL (Notkace API base URL — public, not a secret)
 
 on:
   push:
     branches:
       - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Create production environment file
         run: |
-          cat > .env.production << EOF
-          VUE_APP_API_BASE_URL=${{ secrets.VUE_APP_API_BASE_URL }}
+          cat > .env.production <<'EOF'
+          VUE_APP_API_BASE_URL=${{ vars.VUE_APP_API_BASE_URL }}
           EOF
-        # Add any additional environment variables you need above
 
       - name: Build project
         run: npm run build
 
-      # Clean old assets before deploying new ones
-      - name: Delete old assets from server
-        uses: appleboy/ssh-action@master
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          port: ${{ secrets.PORT }}
-          key: ${{ secrets.SSHKEY }}
-          script: |
-            rm -rf ${{ secrets.DEPLOY_PATH }}/*
-
-      # Deploy built files (dist) via SCP
-      - name: Copy built files to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          port: ${{ secrets.PORT }}
-          key: ${{ secrets.SSHKEY }}
-          source: "dist/"
-          target: ${{ secrets.DEPLOY_PATH }}
-          strip_components: 1
-
-      # Optional: restart or clean something remotely after deploy
-      - name: Run remote post-deploy commands
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          port: ${{ secrets.PORT }}
-          key: ${{ secrets.SSHKEY }}
-          script: |
-            echo "Deployment complete for notkace-vue"
-            # Uncomment if you need to restart something:
-            # sudo systemctl restart nginx
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: dist
+          skip_app_build: true
+          skip_api_build: true

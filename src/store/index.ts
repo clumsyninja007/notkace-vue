@@ -9,10 +9,12 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    ticketApi:
-      process.env.NODE_ENV === 'production'
-        ? 'https://api.archerharmony.com/'
-        : 'http://localhost:5001/',
+    // Base URL for the Notkace API; normalized to end with a slash (paths are appended
+    // directly below). Set VUE_APP_API_BASE_URL at build time (CI); falls back to local dev.
+    ticketApi: (process.env.VUE_APP_API_BASE_URL || 'http://localhost:5001').replace(
+      /\/?$/,
+      '/'
+    ),
     color: '#fff',
     selectedAssignee: '*',
     selectedSoftware: '*',
