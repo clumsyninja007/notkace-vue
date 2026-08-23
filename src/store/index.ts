@@ -1,13 +1,10 @@
-import Vue from 'vue';
-import Vuex from 'vuex';
+import { createStore } from 'vuex';
 import Columns from '@/models/Columns';
 import TicketRow from '@/models/TicketRow';
 import User from '@/models/User';
 import Asset from '@/models/Asset';
 
-Vue.use(Vuex);
-
-export default new Vuex.Store({
+export default createStore({
   state: {
     // Base URL for the Notkace API; normalized to end with a slash (paths are appended
     // directly below). Set VUE_APP_API_BASE_URL at build time (CI); falls back to local dev.

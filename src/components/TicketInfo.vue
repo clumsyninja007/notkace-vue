@@ -3,7 +3,7 @@
     <div
       class="tile is-ancestor"
       style="white-space: pre-line; word-break: break-word"
-      v-if="!loading"
+      v-if="!loading && ticketInfo"
     >
       <div class="tile is-parent">
         <div class="tile is-child">
@@ -23,29 +23,35 @@
         </div>
       </div>
     </div>
-    <b-loading :active.sync="loading" :is-full-page="false"></b-loading>
+    <b-loading v-model="loading" :is-full-page="false"></b-loading>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop } from 'vue-property-decorator';
-import { mixins } from 'vue-class-component';
+import { defineComponent } from 'vue';
+import type { PropType } from 'vue';
 import Helpers from '@/mixins/helpers';
 import { mapActions } from 'vuex';
+import type TicketInfoModel from '@/models/TicketInfo';
 
-@Component({
-  methods: { ...mapActions(['getTicketInfo']) },
-})
-export default class TicketInfo extends mixins(Helpers) {
-  @Prop()
-  ticket!: number;
-
-  // mapped actions
-  getTicketInfo!: (ticket: number) => TicketInfo;
-
-  ticketInfo!: TicketInfo;
-  loading = false;
-
+export default defineComponent({
+  name: 'TicketInfo',
+  mixins: [Helpers],
+  props: {
+    ticket: {
+      type: Number as PropType<number>,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      ticketInfo: null as TicketInfoModel | null,
+      loading: false,
+    };
+  },
+  methods: {
+    ...mapActions(['getTicketInfo']),
+  },
   async created() {
     this.loading = true;
 
@@ -56,8 +62,8 @@ export default class TicketInfo extends mixins(Helpers) {
     }
 
     this.loading = false;
-  }
-}
+  },
+});
 </script>
 
 <style lang="scss" scoped>

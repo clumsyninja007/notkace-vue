@@ -1,20 +1,20 @@
 <template>
   <section>
     <b-navbar fixed-top type="is-dark">
-      <template slot="start">
+      <template #start>
         <b-navbar-item tag="div">
           <b-button type="is-primary" @click="toggleMenu">
             Parameters
           </b-button>
         </b-navbar-item>
       </template>
-      <template slot="end">
+      <template #end>
         <b-navbar-item tag="div">
           <b-button type="is-primary" @click="refresh">Refresh Table</b-button>
         </b-navbar-item>
       </template>
     </b-navbar>
-    <b-modal :active.sync="showMenu">
+    <b-modal v-model="showMenu">
       <div class="box">
         <b-field grouped group-multiline>
           <b-field label="Assignee">
@@ -101,14 +101,24 @@
 </template>
 
 <script lang="ts">
-import { Component, Mixins } from 'vue-property-decorator';
+import { defineComponent } from 'vue';
 import Helpers from '@/mixins/helpers';
 import { mapActions, mapState } from 'vuex';
-import User from '../models/User';
-import Asset from '../models/Asset';
-import Columns from '../models/Columns';
 
-@Component({
+export default defineComponent({
+  name: 'ParamsForm',
+  mixins: [Helpers],
+  data() {
+    return {
+      showMenu: false,
+      currentAssignee: '*',
+      currentSoftware: '*',
+      currentReferredTo: '*',
+      currentDepartment: '*',
+      currentLocation: '*',
+      selectedExclusions: [] as string[],
+    };
+  },
   computed: {
     ...mapState([
       'selectedAssignee',
@@ -136,106 +146,70 @@ import Columns from '../models/Columns';
       'getDepartment',
       'getLocation',
     ]),
+
+    toggleMenu() {
+      this.showMenu = !this.showMenu;
+    },
+
+    async refresh() {
+      this.changePage(1);
+
+      try {
+        await this.getTickets();
+      } catch (e) {
+        this.errorMessage(e);
+      }
+    },
+
+    resetParams() {
+      this.currentAssignee = '*';
+      this.currentSoftware = '*';
+      this.currentReferredTo = '*';
+      this.currentDepartment = '*';
+      this.currentLocation = '*';
+    },
+
+    async handleSubmit() {
+      this.showMenu = false;
+      window.scrollTo(0, 0);
+
+      // eslint-disable-next-line
+      const query: { [k: string]: any } = {};
+
+      if (this.currentAssignee !== '*') {
+        query.assignee = this.currentAssignee;
+      }
+      if (this.currentSoftware !== '*') {
+        query.software = this.currentSoftware;
+      }
+      if (this.currentReferredTo !== '*') {
+        query.referredTo = this.currentReferredTo;
+      }
+      if (this.currentDepartment !== '*') {
+        query.department = this.currentDepartment;
+      }
+      if (this.currentLocation !== '*') {
+        query.location = this.currentLocation;
+      }
+      if (this.selectedExclusions.length > 0) {
+        query.exclude = this.selectedExclusions.join(' ');
+      }
+
+      this.$router.push({
+        name: 'home',
+        query,
+      });
+
+      this.setParams();
+      this.changePage(1);
+
+      try {
+        await this.getTickets();
+      } catch (e) {
+        this.errorMessage(e);
+      }
+    },
   },
-})
-export default class ParamsForm extends Mixins(Helpers) {
-  // mapped state
-  selectedAssignee!: string;
-  selectedDepartment!: string;
-  selectedLocation!: string;
-  selectedSoftware!: string;
-  selectedReferredTo!: string;
-  owners!: User[];
-  departments!: Asset[];
-  locations!: Asset[];
-  software!: Asset[];
-  referredTo!: Asset[];
-  columns!: Columns[];
-  excludedColumns!: string[];
-
-  // mapped actions
-  changePage!: (page: number) => void;
-  getTickets!: () => void;
-  setParams!: () => void;
-  getOwners!: () => void;
-  getSoftware!: () => void;
-  getReferredTo!: () => void;
-  getDepartment!: () => void;
-  getLocation!: () => void;
-
-  // properties
-  showMenu = false;
-  currentAssignee = '*';
-  currentSoftware = '*';
-  currentReferredTo = '*';
-  currentDepartment = '*';
-  currentLocation = '*';
-  selectedExclusions: string[] = [];
-
-  // methods
-  toggleMenu() {
-    this.showMenu = !this.showMenu;
-  }
-
-  async refresh() {
-    this.changePage(1);
-
-    try {
-      await this.getTickets();
-    } catch (e) {
-      this.errorMessage(e);
-    }
-  }
-
-  resetParams() {
-    this.currentAssignee = '*';
-    this.currentSoftware = '*';
-    this.currentReferredTo = '*';
-    this.currentDepartment = '*';
-    this.currentLocation = '*';
-  }
-
-  async handleSubmit() {
-    this.showMenu = false;
-    window.scrollTo(0, 0);
-
-    // eslint-disable-next-line
-    const query: { [k: string]: any } = {};
-
-    if (this.currentAssignee !== '*') {
-      query.assignee = this.currentAssignee;
-    }
-    if (this.currentSoftware !== '*') {
-      query.software = this.currentSoftware;
-    }
-    if (this.currentReferredTo !== '*') {
-      query.referredTo = this.currentReferredTo;
-    }
-    if (this.currentDepartment !== '*') {
-      query.department = this.currentDepartment;
-    }
-    if (this.currentLocation !== '*') {
-      query.location = this.currentLocation;
-    }
-    if (this.selectedExclusions.length > 0) {
-      query.exclude = this.selectedExclusions.join(' ');
-    }
-
-    this.$router.push({
-      name: 'home',
-      query,
-    });
-
-    this.setParams();
-    this.changePage(1);
-
-    try {
-      await this.getTickets();
-    } catch (e) {
-      this.errorMessage(e);
-    }
-  }
-
   async created() {
     this.setParams();
 
@@ -255,8 +229,8 @@ export default class ParamsForm extends Mixins(Helpers) {
     this.currentDepartment = this.selectedDepartment;
     this.currentLocation = this.selectedLocation;
     this.selectedExclusions = this.excludedColumns;
-  }
-}
+  },
+});
 </script>
 
 <style lang="scss" scoped>

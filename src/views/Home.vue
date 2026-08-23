@@ -69,12 +69,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import { defineComponent } from 'vue';
 import TicketTable from '@/components/TicketTable.vue';
 import ParamsForm from '@/components/ParamsForm.vue';
 
-@Component({
+export default defineComponent({
+  name: 'HomeView',
   components: { TicketTable, ParamsForm },
-})
-export default class Home extends Vue {}
+});
 </script>
