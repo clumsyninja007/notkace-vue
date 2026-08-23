@@ -306,11 +306,17 @@ export default defineComponent({
     .level-right {
       .level-item {
         nav.pagination {
+          // These buttons are deliberately light against the dark page, so the
+          // text has to be dark: the inherited pagination colour is near-white,
+          // which left the page numbers at a 1.01:1 contrast ratio (invisible)
+          // and 1.28:1 on hover. #333 gives 10.5:1 and 8.3:1.
           a:not(.is-current):not([disabled]) {
             background-color: #eaeaea;
+            color: #333;
 
             &:hover {
               background-color: #4de4f4;
+              color: #333;
             }
           }
         }
