@@ -39,7 +39,7 @@ export default defineComponent({
   --bulma-scheme-main-l: 20%; // #333 body/table background
   --bulma-scheme-main-bis-l: 26.7%; // #444 striped even row
   --bulma-scheme-main-ter-l: 33.3%; // #555
-  --bulma-text-l: 92%; // #eaeaea
+  --bulma-text-l: 91.8%; // #eaeaea
   --bulma-table-row-hover-background-color: #555;
   --bulma-table-striped-row-even-hover-background-color: #555;
   --bulma-table-cell-border-color: black;

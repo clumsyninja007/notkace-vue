@@ -2,7 +2,14 @@
   "$schema": "https://json.schemastore.org/staticwebapp.config.json",
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/js/*", "/css/*", "/img/*", "/fonts/*", "/*.{ico,png,jpg,jpeg,gif,svg,webp,woff,woff2,ttf,eot,json,map,txt}"]
+    "exclude": [
+      "/assets/*",
+      "/js/*",
+      "/css/*",
+      "/img/*",
+      "/fonts/*",
+      "/*.{ico,png,jpg,jpeg,gif,svg,webp,woff,woff2,ttf,eot,json,map,txt}"
+    ]
   },
   "responseOverrides": {
     "404": {

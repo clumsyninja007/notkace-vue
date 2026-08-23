@@ -1,9 +1,10 @@
 name: Deploy Frontend
 
-# Builds the Vue (CLI) SPA and deploys it to Azure Static Web Apps.
+# Builds the Vue 3 (Vite) SPA and deploys it to Azure Static Web Apps.
 # Requires:
 #   - secret AZURE_STATIC_WEB_APPS_API_TOKEN  (SWA deployment token from the portal)
 #   - repository variable VUE_APP_API_BASE_URL (Notkace API base URL — public, not a secret)
+#     (kept under its original name; Vite reads it as VITE_API_BASE_URL below)
 
 on:
   push:
@@ -24,7 +25,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -33,7 +34,7 @@ jobs:
       - name: Create production environment file
         run: |
           cat > .env.production <<'EOF'
-          VUE_APP_API_BASE_URL=${{ vars.VUE_APP_API_BASE_URL }}
+          VITE_API_BASE_URL=${{ vars.VUE_APP_API_BASE_URL }}
           EOF
 
       - name: Build project

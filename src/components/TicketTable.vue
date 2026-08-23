@@ -253,13 +253,7 @@ export default defineComponent({
 
     // my api determines sort direction by a + or - prefix to the sort field
     async onSort(field: string, order: string) {
-      let sort = '';
-
-      if (order === 'desc') {
-        sort = '-' + field;
-      } else {
-        sort = '+' + field;
-      }
+      const sort = (order === 'desc' ? '-' : '+') + field;
 
       this.changePage(1);
       this.changeSort(sort);
