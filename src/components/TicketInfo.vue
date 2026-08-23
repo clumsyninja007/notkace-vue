@@ -8,7 +8,7 @@
       <div class="tile is-parent">
         <div class="tile is-child">
           <h2 class="title is-4">Long Description</h2>
-          <p style="white-space: pre-line;">
+          <p style="white-space: pre-line">
             {{ ticketInfo.summary }}
           </p>
         </div>

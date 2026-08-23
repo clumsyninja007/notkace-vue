@@ -13,7 +13,7 @@
               <h2
                 v-if="
                   $store.state.selectedAssignee &&
-                    $store.state.selectedAssignee !== '*'
+                  $store.state.selectedAssignee !== '*'
                 "
                 class="subtitle"
               >
@@ -22,7 +22,7 @@
               <h2
                 v-if="
                   $store.state.selectedSoftware &&
-                    $store.state.selectedSoftware !== '*'
+                  $store.state.selectedSoftware !== '*'
                 "
                 class="subtitle"
               >
@@ -31,7 +31,7 @@
               <h2
                 v-if="
                   $store.state.selectedReferredTo &&
-                    $store.state.selectedReferredTo !== '*'
+                  $store.state.selectedReferredTo !== '*'
                 "
                 class="subtitle"
               >
@@ -40,7 +40,7 @@
               <h2
                 v-if="
                   $store.state.selectedDepartment &&
-                    $store.state.selectedDepartment !== '*'
+                  $store.state.selectedDepartment !== '*'
                 "
                 class="subtitle"
               >
@@ -49,7 +49,7 @@
               <h2
                 v-if="
                   $store.state.selectedLocation &&
-                    $store.state.selectedLocation !== '*'
+                  $store.state.selectedLocation !== '*'
                 "
                 class="subtitle"
               >

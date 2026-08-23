@@ -139,7 +139,7 @@
             centered
             :visible="
               !excludedColumns.includes('referredTo') &&
-                selectedReferredTo === '*'
+              selectedReferredTo === '*'
             "
           >
             {{ props.row.referredTo }}

@@ -24,8 +24,9 @@
                 v-for="owner in owners"
                 :key="owner.id"
                 :value="owner.userName"
-                >{{ owner.fullName }}</option
               >
+                {{ owner.fullName }}
+              </option>
             </b-select>
           </b-field>
           <b-field label="Documented Software">
@@ -43,8 +44,9 @@
                 v-for="referee in referredTo"
                 :key="referee.id"
                 :value="referee.name"
-                >{{ referee.name }}</option
               >
+                {{ referee.name }}
+              </option>
             </b-select>
           </b-field>
           <b-field label="Department">
@@ -54,8 +56,9 @@
                 v-for="department in departments"
                 :key="department.id"
                 :value="department.name"
-                >{{ department.name }}</option
               >
+                {{ department.name }}
+              </option>
             </b-select>
           </b-field>
           <b-field label="Location">
@@ -65,8 +68,9 @@
                 v-for="location in locations"
                 :key="location.id"
                 :value="location.name"
-                >{{ location.name }}</option
               >
+                {{ location.name }}
+              </option>
             </b-select>
           </b-field>
           <b-field label="Exclude Columns">
